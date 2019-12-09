@@ -1,8 +1,9 @@
-var http = require('http');
-var fs = require('fs');
-var url = require('url');
-var qs = require('querystring');
+const http = require('http');
+const fs = require('fs');
+const url = require('url');
+const qs = require('querystring');
 const template = require('./lib/template.js');
+const path = require('path');
 
 var app = http.createServer((request, response) => {
     var _url = request.url;
@@ -32,7 +33,10 @@ var app = http.createServer((request, response) => {
       }
       // read file
       else{
-        fs.readFile(`data/${queryData.id}`, 'utf-8', (err, description) => {
+        // path.parse([specific path])
+        // -> 특정 path(dir+bast)를 dir과 base로 나눠서 쓸 수 있게 해줌
+        const filteredId = path.parse(queryData.id).base; // queryData.id가 ..을 사용해서 상위 dir로 가는 것을 막을 수 있음.
+        fs.readFile(`data/${filteredId}`, 'utf-8', (err, description) => {
           fs.readdir('./data', 'utf-8', (err, filelist) => {
           const title = queryData.id;
           const list = template.list(filelist);
@@ -99,7 +103,8 @@ var app = http.createServer((request, response) => {
     }
     // update
     else if (pathname === '/update'){
-      fs.readFile(`data/${queryData.id}`, 'utf-8', (err, description) => {
+      const filteredId = path.parse(queryData.id).base;
+      fs.readFile(`data/${filteredId}`, 'utf-8', (err, description) => {
         fs.readdir('./data', 'utf-8', (err, filelist) => {
         const title = queryData.id;
         const list = template.list(filelist);
@@ -159,8 +164,9 @@ var app = http.createServer((request, response) => {
       request.on('end', () => {
         const post = qs.parse(body);
         const id = post.id;
-        
-        fs.unlink(`data/${id}`, (err) => {
+        const filteredId = path.parse(id).base;
+
+        fs.unlink(`data/${filteredId}`, (err) => {
           console.log(err);
           response.writeHead(302, {Location: `/`});
           response.end();
