@@ -3,33 +3,35 @@ var fs = require('fs');
 var url = require('url');
 var qs = require('querystring');
 
-function templateHTML(title, list, body, control){
-  return `<!doctype html>
-  <html>
-    <head>
-      <title>WEB1 - ${title}</title>
-      <meta charset="utf-8">
-    </head>
-    <body>
-      <h1><a href="/">WEB</a></h1>
-      ${list}
-      ${control === undefined ? '' : control}
-      ${body}
-    </body>
-  </html>`;
-}
+const template = {
+  html: (title, list, body, control) => {
+    return `<!doctype html>
+    <html>
+      <head>
+        <title>WEB1 - ${title}</title>
+        <meta charset="utf-8">
+      </head>
+      <body>
+        <h1><a href="/">WEB</a></h1>
+        ${list}
+        ${control === undefined ? '' : control}
+        ${body}
+      </body>
+    </html>`;
+  },
 
-function templateList(filelist) {
-  let list = `<ul>`;
-  for (let i=0; i< filelist.length; i++){
-    list += `<li><a href="/?id=${filelist[i]}">${filelist[i]}</a></li>`;
+  list: (filelist) => {
+    let list = `<ul>`;
+    for (let i=0; i< filelist.length; i++){
+      list += `<li><a href="/?id=${filelist[i]}">${filelist[i]}</a></li>`;
+    }
+    list += `</ul>`;
+    
+    return list;
   }
-  list += `</ul>`;
-  
-  return list;
 }
 
-var app = http.createServer(function(request, response){
+var app = http.createServer((request, response) => {
     var _url = request.url;
 
     // url.parse(_url, true)
@@ -46,13 +48,13 @@ var app = http.createServer(function(request, response){
         fs.readdir('./data', 'utf-8', (err, filelist) => {
           const description = 'Hello, Node.js';
           const title = 'Welcome';
-          const list = templateList(filelist);
+          const list = template.list(filelist);
           const body = `<h2>${title}</h2><p>${description}</p>`;
           const control = `<a href="/create">create</a>`;
-          const template = templateHTML(title, list, body, control);
+          const html = template.html(title, list, body, control);
           
           response.writeHead(200);
-          response.end(template);
+          response.end(html);
         })
       }
       // read file
@@ -60,7 +62,7 @@ var app = http.createServer(function(request, response){
         fs.readFile(`data/${queryData.id}`, 'utf-8', (err, description) => {
           fs.readdir('./data', 'utf-8', (err, filelist) => {
           const title = queryData.id;
-          const list = templateList(filelist);
+          const list = template.list(filelist);
           const body = `<h2>${title}</h2><p>${description}</p>`;
 
           // delete는 link를 사용하는 get으로 구현해서는 안 됨. 접근할 수 없도록 post 방식으로 보내야 함.
@@ -71,10 +73,10 @@ var app = http.createServer(function(request, response){
             <input type="hidden" name="id" value="${title}" />
             <input type="submit" value="delete" />
           </form>`;
-          const template = templateHTML(title, list, body, control);
+          const html = template.html(title, list, body, control);
 
           response.writeHead(200);
-          response.end(template);
+          response.end(html);
           })
         })
       }
@@ -83,7 +85,7 @@ var app = http.createServer(function(request, response){
     else if (pathname === '/create'){
       fs.readdir('./data', 'utf-8', (err, filelist) => {
         const title = 'WEB - create';
-        const list = templateList(filelist);
+        const list = template.list(filelist);
         const body = `<form action="/create_process" method="POST">
         <p><input type="text" name="title" placeholder="title" /></p>
         <p>
@@ -93,19 +95,23 @@ var app = http.createServer(function(request, response){
             <input type="submit" />
         </p>
     </form>`;
-        const template = templateHTML(title, list, body);
+        const html = template.html(title, list, body);
         
         response.writeHead(200);
-        response.end(template);
+        response.end(html);
       })
     }
     // create - redirection
     else if (pathname === '/create_process') {
       let body = '';
+
+      // data event : data chunk를 전송할 때 발생
       request.on('data', data => {
         // console.log(Buffer.from(data).toString());
         body += data;
       });
+
+      // end event : 더 이상 소비할 data가 없을 때 발생
       request.on('end', () => {
         const post = qs.parse(body);
         const title = post.title;
@@ -123,7 +129,7 @@ var app = http.createServer(function(request, response){
       fs.readFile(`data/${queryData.id}`, 'utf-8', (err, description) => {
         fs.readdir('./data', 'utf-8', (err, filelist) => {
         const title = queryData.id;
-        const list = templateList(filelist);
+        const list = template.list(filelist);
         const body = `
         <form action="/update_process" method="POST">
           <input type="hidden" name="id" value="${title}" />
@@ -133,20 +139,24 @@ var app = http.createServer(function(request, response){
         </form>
         `;
         
-        const template = templateHTML(title, list, body);
+        const html = template.html(title, list, body);
 
         response.writeHead(200);
-        response.end(template);
+        response.end(html);
         })
       })
     }
     // update_process
     else if (pathname === '/update_process'){
       let body = '';
+
+      // data event : data chunk를 전송할 때 발생
       request.on('data', data => {
         // console.log(Buffer.from(data).toString());
         body += data;
       });
+
+      // end event : 더 이상 소비할 data가 없을 때 발생
       request.on('end', () => {
         const post = qs.parse(body);
         const id = post.id;
@@ -165,10 +175,14 @@ var app = http.createServer(function(request, response){
     // delete_process
     else if (pathname === '/delete_process'){
       let body = '';
+
+      // data event : data chunk를 전송할 때 발생
       request.on('data', data => {
         // console.log(Buffer.from(data).toString());
         body += data;
       });
+
+      // end event : 더 이상 소비할 data가 없을 때 발생
       request.on('end', () => {
         const post = qs.parse(body);
         const id = post.id;
