@@ -4,6 +4,7 @@ const url = require('url');
 const qs = require('querystring');
 const template = require('./lib/template.js');
 const path = require('path');
+const sanitizeHtml = require('sanitize-html');
 
 var app = http.createServer((request, response) => {
     var _url = request.url;
@@ -38,22 +39,28 @@ var app = http.createServer((request, response) => {
         const filteredId = path.parse(queryData.id).base; // queryData.id가 ..을 사용해서 상위 dir로 가는 것을 막을 수 있음.
         fs.readFile(`data/${filteredId}`, 'utf-8', (err, description) => {
           fs.readdir('./data', 'utf-8', (err, filelist) => {
-          const title = queryData.id;
-          const list = template.list(filelist);
-          const body = `<h2>${title}</h2><p>${description}</p>`;
+            const title = queryData.id;
 
-          // delete는 link를 사용하는 get으로 구현해서는 안 됨. 접근할 수 없도록 post 방식으로 보내야 함.
-          const control = `<a href="/create">create</a>
-          <a href="/update?id=${title}">update</a>
+            const sanitizedTitle = sanitizeHtml(title);
+            const sanitizedDescription = sanitizeHtml(description, {
+              allowedTags: ['h1']
+            });
 
-          <form action="delete_process" method="POST">
-            <input type="hidden" name="id" value="${title}" />
-            <input type="submit" value="delete" />
-          </form>`;
-          const html = template.html(title, list, body, control);
+            const list = template.list(filelist);
+            const body = `<h2>${title}</h2><p>${sanitizedDescription}</p>`;
 
-          response.writeHead(200);
-          response.end(html);
+            // delete는 link를 사용하는 get으로 구현해서는 안 됨. 접근할 수 없도록 post 방식으로 보내야 함.
+            const control = `<a href="/create">create</a>
+            <a href="/update?id=${sanitizedTitle}">update</a>
+
+            <form action="delete_process" method="POST">
+              <input type="hidden" name="id" value="${sanitizedTitle}" />
+              <input type="submit" value="delete" />
+            </form>`;
+            const html = template.html(sanitizedTitle, list, body, control);
+
+            response.writeHead(200);
+            response.end(html);
           })
         })
       }
