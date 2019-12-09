@@ -62,7 +62,15 @@ var app = http.createServer(function(request, response){
           const title = queryData.id;
           const list = templateList(filelist);
           const body = `<h2>${title}</h2><p>${description}</p>`;
-          const control = `<a href="/create">create</a> <a href="/update?id=${title}">update</a>`;
+
+          // delete는 link를 사용하는 get으로 구현해서는 안 됨. 접근할 수 없도록 post 방식으로 보내야 함.
+          const control = `<a href="/create">create</a>
+          <a href="/update?id=${title}">update</a>
+
+          <form action="delete_process" method="POST">
+            <input type="hidden" name="id" value="${title}" />
+            <input type="submit" value="delete" />
+          </form>`;
           const template = templateHTML(title, list, body, control);
 
           response.writeHead(200);
@@ -150,6 +158,24 @@ var app = http.createServer(function(request, response){
         fs.writeFile(`data/${title}`, description, 'utf-8', err => {
           console.log(err);
           response.writeHead(302, {Location: `/?id=${qs.escape(title)}`});
+          response.end();
+        })
+      });
+    }
+    // delete_process
+    else if (pathname === '/delete_process'){
+      let body = '';
+      request.on('data', data => {
+        // console.log(Buffer.from(data).toString());
+        body += data;
+      });
+      request.on('end', () => {
+        const post = qs.parse(body);
+        const id = post.id;
+        
+        fs.unlink(`data/${id}`, (err) => {
+          console.log(err);
+          response.writeHead(302, {Location: `/`});
           response.end();
         })
       });
