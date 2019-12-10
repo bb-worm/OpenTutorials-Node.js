@@ -9,11 +9,13 @@ const port = 3000
 // middleware 
 const bodyParser = require('body-parser');
 const compression = require('compression');
+const helmet = require('helmet'); // 보안 middleware
 
 // middleware 장착
 app.use(express.static('public')); // public 폴더에 있는 static files를 사용할 수 있게 함
 app.use(bodyParser.urlencoded({ extended: false }));
 app.use(compression());
+app.use(helmet()); 
 
 // 해당 middleware가 get 요청에만 사용되게 함
 /*
