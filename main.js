@@ -4,8 +4,12 @@ const fs = require('fs');
 const path = require('path');
 const qs = require('querystring');
 const sanitizeHtml = require('sanitize-html');
+const bodyParser = require('body-parser');
 const template = require('./lib/template');
 const port = 3000
+
+// bodyparser라는 middleware 장착
+app.use(bodyParser.urlencoded({ extended: false }))
 
 // Home
 app.get('/', (request, response) => {
@@ -70,22 +74,14 @@ app.get('/create', (request, response) => {
 })
 
 app.post('/create_process', (request, response) => {
-  let body = '';
-  // data event : data chunk를 전송할 때 발생
-  request.on('data', data => {
-    body += data;
-  });
-
-  // end event : 더 이상 소비할 data가 없을 때 발생
-  request.on('end', () => {
-    const post = qs.parse(body);
-    const title = post.title;
-    const description = post.description;
-    
-    fs.writeFile(`data/${title}`, description, 'utf-8', err => {
-      response.redirect(`/page/${qs.escape(title)}`);
-    })
-  });
+  // bodyparser middleware를 통해 request.on()을 할 필요 없이 body를 가져옴
+  const post = request.body;
+  const title = post.title;
+  const description = post.description;
+  
+  fs.writeFile(`data/${title}`, description, 'utf-8', err => {
+    response.redirect(`/page/${qs.escape(title)}`);
+  })
 })
 
 app.get('/update/:pageId', (request, response) => {
@@ -111,48 +107,26 @@ app.get('/update/:pageId', (request, response) => {
 })
 
 app.post('/update_process', (request, response) => {
-  let body = '';
-
-  // data event : data chunk를 전송할 때 발생
-  request.on('data', data => {
-    // console.log(Buffer.from(data).toString());
-    body += data;
+  const post = request.body;
+  const id = post.id;
+  const title = post.title;
+  const description = post.description;
+  fs.rename(`data/${id}`, `data/${title}`, (err) => {
+    console.log(err);
   });
-
-  // end event : 더 이상 소비할 data가 없을 때 발생
-  request.on('end', () => {
-    const post = qs.parse(body);
-    const id = post.id;
-    const title = post.title;
-    const description = post.description;
-    fs.rename(`data/${id}`, `data/${title}`, (err) => {
-      console.log(err);
-    });
-    fs.writeFile(`data/${title}`, description, 'utf-8', err => {
-      response.redirect(`/page/${qs.escape(title)}`)
-    })
+  fs.writeFile(`data/${title}`, description, 'utf-8', err => {
+    response.redirect(`/page/${qs.escape(title)}`)
   })
 })
 
 app.post('/delete_process', (request, response) => {
-  let body = '';
+  const post = request.body;
+  const id = post.id;
+  const filteredId = path.parse(id).base;
 
-  // data event : data chunk를 전송할 때 발생
-  request.on('data', data => {
-    // console.log(Buffer.from(data).toString());
-    body += data;
-  });
-
-  // end event : 더 이상 소비할 data가 없을 때 발생
-  request.on('end', () => {
-    const post = qs.parse(body);
-    const id = post.id;
-    const filteredId = path.parse(id).base;
-
-    fs.unlink(`data/${filteredId}`, (err) => {
-      response.redirect('/');
-    })
-  });
+  fs.unlink(`data/${filteredId}`, (err) => {
+    response.redirect('/');
+  })
 })
 
 app.listen(port, () => console.log(`Example app listening on port ${port}!`))
