@@ -4,12 +4,17 @@ const fs = require('fs');
 const path = require('path');
 const qs = require('querystring');
 const sanitizeHtml = require('sanitize-html');
-const bodyParser = require('body-parser');
 const template = require('./lib/template');
+
+// middleware 
+const bodyParser = require('body-parser');
+const compression = require('compression');
+
 const port = 3000
 
-// bodyparser라는 middleware 장착
-app.use(bodyParser.urlencoded({ extended: false }))
+// middleware 장착
+app.use(bodyParser.urlencoded({ extended: false }));
+app.use(compression());
 
 // Home
 app.get('/', (request, response) => {
