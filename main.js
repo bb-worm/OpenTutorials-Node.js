@@ -1,8 +1,8 @@
 const express = require('express')
 const app = express()
 const fs = require('fs');
-const template = require('./lib/template');
 const topicRouter = require('./routes/topic');
+const indexRouter = require('./routes/index');
 
 const port = 3000
 
@@ -27,18 +27,7 @@ app.get('*', (request, response, next) => {
   })
 })
 
-// Home
-app.get('/', (request, response) => {
-  const description = 'Hello, Node.js';
-  const title = 'Welcome';
-  const list = template.list(request.list); // template 모듈 사용
-  const body = `<h2>${title}</h2><p>${description}</p>
-  <img src="/images/music.jpg" style="width:500px;" />`;
-  const control = `<a href="/topic/create">create</a>`;
-  const html = template.html(title, list, body, control); // template 모듈 사용
-  
-  response.send(html);
-})
+app.use('/', indexRouter);
 
 app.use('/topic', topicRouter);
 
