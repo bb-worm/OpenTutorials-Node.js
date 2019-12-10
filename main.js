@@ -16,7 +16,12 @@ const compression = require('compression');
 app.use(bodyParser.urlencoded({ extended: false }));
 app.use(compression());
 
-app.use((request, response, next) => {
+// 해당 middleware가 get 요청에만 사용되게 함
+/*
+사용 방식을 통해 사실 아래에서 사용했던 것들이 모두 middleware였음을 알 수 있음
+위에서부터 내려오며 매칭되는 middleware를 실행하고, next()를 통해 다음 매칭되는 middleware로 넘어감
+*/
+app.get('*', (request, response, next) => {
   fs.readdir('./data', 'utf-8', (err, filelist) => {
     request.list = filelist;
     next();
