@@ -13,6 +13,7 @@ const bodyParser = require('body-parser');
 const compression = require('compression');
 
 // middleware 장착
+app.use(express.static('public')); // public 폴더에 있는 static files를 사용할 수 있게 함
 app.use(bodyParser.urlencoded({ extended: false }));
 app.use(compression());
 
@@ -30,12 +31,11 @@ app.get('*', (request, response, next) => {
 
 // Home
 app.get('/', (request, response) => {
-  console.log(request.list);
-
   const description = 'Hello, Node.js';
   const title = 'Welcome';
   const list = template.list(request.list); // template 모듈 사용
-  const body = `<h2>${title}</h2><p>${description}</p>`;
+  const body = `<h2>${title}</h2><p>${description}</p>
+  <img src="/images/music.jpg" style="width:500px;" />`;
   const control = `<a href="/create">create</a>`;
   const html = template.html(title, list, body, control); // template 모듈 사용
   
