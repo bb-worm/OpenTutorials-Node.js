@@ -43,28 +43,34 @@ app.get('/', (request, response) => {
 })
 
 // querystring 사용하지 않고, route parameter를 사용
-app.get('/page/:pageId', (request, response) => {
+app.get('/page/:pageId', (request, response, next) => {
   const filteredId = path.parse(request.params.pageId).base; // queryData.id가 ..을 사용해서 상위 dir로 가는 것을 막을 수 있음
   fs.readFile(`data/${filteredId}`, 'utf-8', (err, description) => {
-    const title = request.params.pageId;
-    const sanitizedTitle = sanitizeHtml(title);
-    const sanitizedDescription = sanitizeHtml(description, {
-      allowedTags: ['h1']
-    });
-
-    const list = template.list(request.list); // template 모듈 사용
-    const body = `<h2>${title}</h2><p>${sanitizedDescription}</p>`;
-
-    // delete는 link를 사용하는 get으로 구현해서는 안 됨. 접근할 수 없도록 post 방식으로 보내야 함.
-    const control = `<a href="/create">create</a>
-    <a href="/update/${sanitizedTitle}">update</a>
-    <form action="/delete_process" method="POST">
-      <input type="hidden" name="id" value="${sanitizedTitle}" />
-      <input type="submit" value="delete" />
-    </form>`;
-    const html = template.html(sanitizedTitle, list, body, control); // template 모듈 사용
-
-    response.send(html);
+    if (err){
+      // status code 500
+      next(err);
+    }
+    else{
+      const title = request.params.pageId;
+      const sanitizedTitle = sanitizeHtml(title);
+      const sanitizedDescription = sanitizeHtml(description, {
+        allowedTags: ['h1']
+      });
+  
+      const list = template.list(request.list); // template 모듈 사용
+      const body = `<h2>${title}</h2><p>${sanitizedDescription}</p>`;
+  
+      // delete는 link를 사용하는 get으로 구현해서는 안 됨. 접근할 수 없도록 post 방식으로 보내야 함.
+      const control = `<a href="/create">create</a>
+      <a href="/update/${sanitizedTitle}">update</a>
+      <form action="/delete_process" method="POST">
+        <input type="hidden" name="id" value="${sanitizedTitle}" />
+        <input type="submit" value="delete" />
+      </form>`;
+      const html = template.html(sanitizedTitle, list, body, control); // template 모듈 사용
+  
+      response.send(html);
+    }
   })
 })
 
@@ -98,10 +104,15 @@ app.post('/create_process', (request, response) => {
   })
 })
 
-app.get('/update/:pageId', (request, response) => {
+app.get('/update/:pageId', (request, response, next) => {
   const filteredId = path.parse(request.params.pageId).base;
     fs.readFile(`data/${filteredId}`, 'utf-8', (err, description) => {
-      const title = request.params.pageId;
+      if (err){
+        // status code 500
+        next(err);
+      }
+      else{
+        const title = request.params.pageId;
       const list = template.list(request.list); // template 모듈 사용
       const body = `
       <form action="/update_process" method="POST">
@@ -115,6 +126,7 @@ app.get('/update/:pageId', (request, response) => {
       const html = template.html(title, list, body); // template 모듈 사용
 
       response.send(html);
+      }
     })
 })
 
@@ -139,6 +151,18 @@ app.post('/delete_process', (request, response) => {
   fs.unlink(`data/${filteredId}`, (err) => {
     response.redirect('/');
   })
+})
+
+// status code 500
+// next(err)가 실행되면 여기로 옴
+app.use((err, request, response, next) => {
+  console.log(err.stack);
+  response.status(500).send(`What??????`);
+})
+
+// status code 404
+app.use((request, response, next) => {
+  response.status(404).send(`Sorry, can't find that!!!!!`);
 })
 
 app.listen(port, () => console.log(`Example app listening on port ${port}!`))
