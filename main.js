@@ -3,6 +3,7 @@ const app = express()
 const fs = require('fs');
 const topicRouter = require('./routes/topic');
 const indexRouter = require('./routes/index');
+const cookie = require('cookie');
 
 const port = 3000
 
@@ -27,6 +28,19 @@ app.get('*', (request, response, next) => {
     request.list = filelist;
     next();
   })
+})
+
+app.get('*', (request, response, next) => {
+  request.isOwner = false;
+
+  if (request.headers.cookie){
+    const cookies = cookie.parse(request.headers.cookie);
+    if (cookies.id === 'xofyd99' && cookies.password === '111'){
+      request.isOwner = true;
+    }
+  }
+
+  next();
 })
 
 app.use('/', indexRouter);

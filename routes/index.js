@@ -10,7 +10,7 @@ router.get('/', (request, response) => {
     const body = `<h2>${title}</h2><p>${description}</p>
     <img src="/images/music.jpg" style="width:500px;" />`;
     const control = `<a href="/topic/create">create</a>`;
-    const html = template.html(title, list, body, control); // template 모듈 사용
+    const html = template.html(title, list, body, request.isOwner, control); // template 모듈 사용
 
     response.send(html);
 })

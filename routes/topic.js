@@ -7,10 +7,16 @@ const template = require('../lib/template');
 const qs = require('querystring');
 
 router.get('/create', (request, response) => {
+
+  if (request.isOwner === false){
+    response.send(`Login required~! <p><a href="login">Login</a></p>`)
+  }
+
   const title = 'WEB - create';
   const list = template.list(request.list); // template 모듈 사용
   const body = `
   <form action="/topic/create_process" method="POST">
+  <input type="hidden" name="isOwner" value="${request.isOwner}" />
   <p><input type="text" name="title" placeholder="title" /></p>
   <p>
       <textarea name="description" placeholder="description"></textarea>
@@ -19,12 +25,13 @@ router.get('/create', (request, response) => {
       <input type="submit" />
   </p>
   </form>`;
-  const html = template.html(title, list, body); // template 모듈 사용
+  const html = template.html(title, list, body, request.isOwner); // template 모듈 사용
 
   response.send(html);
 })
   
 router.post('/create_process', (request, response) => {
+  
   // bodyparser middleware를 통해 request.on()을 할 필요 없이 body를 가져옴
   const post = request.body;
   const title = post.title;
@@ -54,7 +61,7 @@ router.get('/update/:pageId', (request, response, next) => {
     </form>
     `;
     
-    const html = template.html(title, list, body); // template 모듈 사용
+    const html = template.html(title, list, body, request.isOwner); // template 모듈 사용
 
     response.send(html);
     }
@@ -83,9 +90,54 @@ router.post('/delete_process', (request, response) => {
     response.redirect('/');
   })
 })
+
+router.get('/login', (request, response, next) => {
+  const title = 'Login';
+  const list = template.list(request.list); // template 모듈 사용
+  const body = `<h2>${title}</h2>
+  <form action="/topic/login_process" method="post">
+    <p><input type="text" name="id" placeholder="id"></p>
+    <p><input type="password" name="password" placeholder="password"></p>
+    <p><input type="submit"></p>
+  </form>
+  `;
+  const control = `<a href="/topic/create">create</a>`;
+  const html = template.html(title, list, body, request.isOwner, control); // template 모듈 사용
+
+  response.send(html);
+})
+
+router.post('/login_process', (request, response) => {
+  const post = request.body;
+  const id = post.id;
+  const password=  post.password;
+
+  if (id === 'xofyd99' && password === '111'){
+    response.cookie('id', id);
+    response.cookie('password', password);
+    response.redirect('/');
+  }
+  else{
+    console.log("Fail to login!");
+    const html = `Who?
+    <p><a href='/'>Home</a></p>`
+    response.send(html);
+  }
+})
+
+router.get('/logout', (request, response) => {
+  response.clearCookie('id');
+  response.clearCookie('password');
+  response.redirect('/');
+})
   
 // querystring 사용하지 않고, route parameter를 사용
 router.get('/:pageId', (request, response, next) => {
+  
+  if (request.isOwner === false){
+    response.send(`Login required~! <p><a href="login">Login</a></p>`)
+  }
+
   const filteredId = path.parse(request.params.pageId).base; // queryData.id가 ..을 사용해서 상위 dir로 가는 것을 막을 수 있음
   fs.readFile(`data/${filteredId}`, 'utf-8', (err, description) => {
     if (err){
@@ -109,7 +161,7 @@ router.get('/:pageId', (request, response, next) => {
         <input type="hidden" name="id" value="${sanitizedTitle}" />
         <input type="submit" value="delete" />
       </form>`;
-      const html = template.html(sanitizedTitle, list, body, control); // template 모듈 사용
+      const html = template.html(sanitizedTitle, list, body, request.isOwner, control); // template 모듈 사용
   
       response.send(html);
     }
