@@ -10,26 +10,17 @@ app.use(session({
   saveUninitialized: true
 }))
 
-app.use(function (req, res, next) {
-  if (!req.session.views) {
-    req.session.views = {}
-  }
+app.get('/', function (req, res, next) {
+    console.log(req.session);
 
-  // get the url pathname
-  var pathname = parseurl(req).pathname
+    if (req.session.num === undefined){
+        req.session.num = 1;
+    }
+    else {
+        req.session.num += 1;
+    }
 
-  // count the views
-  req.session.views[pathname] = (req.session.views[pathname] || 0) + 1
-
-  next()
-})
-
-app.get('/foo', function (req, res, next) {
-  res.send('you viewed this page ' + req.session.views['/foo'] + ' times')
-})
-
-app.get('/bar', function (req, res, next) {
-  res.send('you viewed this page ' + req.session.views['/bar'] + ' times')
+    res.send(`Views : ${req.session.num}`);
 })
 
 app.listen(3000, () => {
