@@ -35,9 +35,27 @@ const authData = {
   nickname: "bb_worm"
 };
 
+// passport.js 사용
 const passport = require("passport"),
   LocalStrategy = require("passport-local").Strategy;
 
+app.use(passport.initialize()); // passport를 사용하겠다는 의미
+app.use(passport.session()); // 내부적으로 session을 사용하겠다는 의미
+
+//
+passport.serializeUser((user, done) => {
+  console.log("seri", user);
+  done(null, user.email); // session을 사용하겠다고 했으므로, session 파일에 저장됨
+});
+
+// page 방문 시마다 호출 됨
+// session 파일에 저장된 사용자 정보를 조회하는 용도
+passport.deserializeUser((id, done) => {
+  console.log("desi", id);
+  done(null, authData);
+});
+
+// login을 성공했는지 실패했는지 설정
 passport.use(
   new LocalStrategy(
     {
@@ -47,7 +65,7 @@ passport.use(
     (username, password, done) => {
       if (username === authData.email) {
         if (password === authData.password) {
-          return done(null, authData);
+          return done(null, authData); // passport.serializeUser 함수를 호출함
         }
         // wrong password
         else {
@@ -62,6 +80,7 @@ passport.use(
   )
 );
 
+// passport가 login을 처리하게 함
 app.post(
   "/auth/login_process",
   passport.authenticate("local", {
