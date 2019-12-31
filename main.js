@@ -29,6 +29,10 @@ app.use(
   })
 );
 
+const passport = require('passport')
+  , LocalStrategy = require('passport-local')
+  , Strategy;
+
 // 해당 middleware가 get 요청에만 사용되게 함
 /*
 사용 방식을 통해 사실 아래에서 사용했던 것들이 모두 middleware였음을 알 수 있음
