@@ -7,37 +7,50 @@ const template = require("../lib/template");
 const qs = require("querystring");
 const auth = require("../lib/auth");
 
-router.get("/login", (request, response) => {
-  const fmsg = request.flash();
-  let feedback = "";
-  if (fmsg.error) {
-    feedback = fmsg.error[0];
-  }
+module.exports = passport => {
+  router.get("/login", (request, response) => {
+    const fmsg = request.flash();
+    let feedback = "";
+    if (fmsg.error) {
+      feedback = fmsg.error[0];
+    }
 
-  const title = "WEB - login";
-  const list = template.list(request.list); // template 모듈 사용
-  const body = `
-  <div style="color:red;">${feedback}</div>
-  <form action="/auth/login_process" method="POST">
-  <p><input type="text" name="email" placeholder="email" /></p>
-  <p><input type="password" name="pwd" placeholder="password" /></p>
-  <p>
-      <input type="submit" value="login" />
-  </p>
-  </form>`;
-  const html = template.html(
-    title,
-    list,
-    body,
-    auth.statusUI(request, response)
-  ); // template 모듈 사용
+    const title = "WEB - login";
+    const list = template.list(request.list); // template 모듈 사용
+    const body = `
+    <div style="color:red;">${feedback}</div>
+    <form action="/auth/login_process" method="POST">
+    <p><input type="text" name="email" placeholder="email" /></p>
+    <p><input type="password" name="pwd" placeholder="password" /></p>
+    <p>
+        <input type="submit" value="login" />
+    </p>
+    </form>`;
+    const html = template.html(
+      title,
+      list,
+      body,
+      auth.statusUI(request, response)
+    ); // template 모듈 사용
 
-  response.send(html);
-});
+    response.send(html);
+  });
 
-router.get("/logout", (request, response) => {
-  request.logout(); // passport.js 에서 로그아웃, req.user와 login session을 비움
-  response.redirect("/");
-});
+  // passport가 login을 처리하게 함
+  router.post(
+    "/login_process",
+    passport.authenticate("local", {
+      successRedirect: "/", // login 성공 시
+      failureRedirect: "/auth/login", // login 실패 시
+      successFlash: true,
+      failureFlash: true
+    })
+  );
 
-module.exports = router;
+  router.get("/logout", (request, response) => {
+    request.logout(); // passport.js 에서 로그아웃, req.user와 login session을 비움
+    response.redirect("/");
+  });
+
+  return router;
+};

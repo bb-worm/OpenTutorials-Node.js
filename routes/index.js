@@ -11,7 +11,6 @@ router.get("/", (request, response) => {
     feedback = fmsg.success[0];
   }
 
-  console.log("/", request.user);
   const description = "Hello, Node.js";
   const title = "Welcome";
   const list = template.list(request.list); // template 모듈 사용
