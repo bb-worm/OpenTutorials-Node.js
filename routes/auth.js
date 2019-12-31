@@ -28,28 +28,9 @@ router.get("/login", (request, response) => {
   response.send(html);
 });
 
-// router.post("/login_process", (request, response) => {
-//   // bodyparser middleware를 통해 request.on()을 할 필요 없이 body를 가져옴
-//   const post = request.body;
-//   const email = post.email;
-//   const password = post.pwd;
-
-//   if (email === authData.email && password === authData.password) {
-//     request.session.is_logined = true;
-//     request.session.nickname = authData.nickname;
-//     request.session.save(() => {
-//       response.redirect("/");
-//     });
-//   } else {
-//     response.send("Who?");
-//   }
-// });
-
 router.get("/logout", (request, response) => {
-  request.session.destroy(err => {
-    // console.log(request.session.is_logined);
-    response.redirect("/");
-  });
+  request.logout(); // passport.js 에서 로그아웃, req.user와 login session을 비움
+  response.redirect("/");
 });
 
 module.exports = router;
