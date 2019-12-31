@@ -59,6 +59,7 @@ passport.deserializeUser((id, done) => {
 passport.use(
   new LocalStrategy(
     {
+      // filed name이 기본으로 "username"과 "password"로 설정되어 있는데, 이를 변경해줌
       usernameField: "email",
       passwordField: "pwd"
     },
