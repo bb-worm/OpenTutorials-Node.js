@@ -5,11 +5,19 @@ const auth = require("../lib/auth");
 
 // Home
 router.get("/", (request, response) => {
+  const fmsg = request.flash();
+  let feedback = "";
+  if (fmsg.success) {
+    feedback = fmsg.success[0];
+  }
+
   console.log("/", request.user);
   const description = "Hello, Node.js";
   const title = "Welcome";
   const list = template.list(request.list); // template 모듈 사용
-  const body = `<h2>${title}</h2><p>${description}</p>
+  const body = `
+    <div style="color:red;">${feedback}</div>
+    <h2>${title}</h2><p>${description}</p>
     <img src="/images/music.jpg" style="width:500px;" />`;
   const control = `<a href="/topic/create">create</a>`;
   const html = template.html(

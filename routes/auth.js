@@ -8,9 +8,16 @@ const qs = require("querystring");
 const auth = require("../lib/auth");
 
 router.get("/login", (request, response) => {
+  const fmsg = request.flash();
+  let feedback = "";
+  if (fmsg.error) {
+    feedback = fmsg.error[0];
+  }
+
   const title = "WEB - login";
   const list = template.list(request.list); // template 모듈 사용
   const body = `
+  <div style="color:red;">${feedback}</div>
   <form action="/auth/login_process" method="POST">
   <p><input type="text" name="email" placeholder="email" /></p>
   <p><input type="password" name="pwd" placeholder="password" /></p>
