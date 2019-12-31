@@ -29,9 +29,46 @@ app.use(
   })
 );
 
-const passport = require('passport')
-  , LocalStrategy = require('passport-local')
-  , Strategy;
+const authData = {
+  email: "xofyd99",
+  password: "111",
+  nickname: "bb_worm"
+};
+
+const passport = require("passport"),
+  LocalStrategy = require("passport-local").Strategy;
+
+passport.use(
+  new LocalStrategy(
+    {
+      usernameField: "email",
+      passwordField: "pwd"
+    },
+    (username, password, done) => {
+      if (username === authData.email) {
+        if (password === authData.password) {
+          return done(null, authData);
+        }
+        // wrong password
+        else {
+          return done(null, false, { message: "Incorrect password." });
+        }
+      }
+      // wrong email
+      else {
+        return done(null, false, { message: "Incorrect username." });
+      }
+    }
+  )
+);
+
+app.post(
+  "/auth/login_process",
+  passport.authenticate("local", {
+    successRedirect: "/", // login 성공 시
+    failureRedirect: "/auth/login" // login 실패 시
+  })
+);
 
 // 해당 middleware가 get 요청에만 사용되게 함
 /*
