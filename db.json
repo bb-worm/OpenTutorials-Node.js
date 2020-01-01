@@ -41,6 +41,12 @@
       "email": "xo",
       "password": "1",
       "displayName": "12"
+    },
+    {
+      "id": "mLgDYbqz",
+      "email": "new",
+      "password": "$2b$10$Tg7D0qjpv0vSBLsoCSITb.iv1yHK8/pN7VLjD1xXD6DmslGu4ugN.",
+      "displayName": "new"
     }
   ],
   "topics": [

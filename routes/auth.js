@@ -13,6 +13,10 @@ const db = require("../lib/db");
 // shortid
 const shortid = require("shortid");
 
+// bcrypt : 암호화
+const bcrypt = require("bcrypt");
+const saltRounds = 10;
+
 module.exports = passport => {
   router.get("/login", (request, response) => {
     const fmsg = request.flash();
@@ -110,18 +114,20 @@ module.exports = passport => {
       request.flash("error", "Already used email!");
       response.redirect("/auth/register");
     } else {
-      const user = {
-        id: shortid.generate(),
-        email: email,
-        password: pwd,
-        displayName: displayName
-      };
-      db.get("users")
-        .push(user)
-        .write();
+      bcrypt.hash(pwd, saltRounds, (err, hash) => {
+        const user = {
+          id: shortid.generate(),
+          email: email,
+          password: hash,
+          displayName: displayName
+        };
+        db.get("users")
+          .push(user)
+          .write();
 
-      request.login(user, err => {
-        return response.redirect("/");
+        request.login(user, err => {
+          return response.redirect("/");
+        });
       });
     }
   });
