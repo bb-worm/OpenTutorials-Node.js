@@ -7,6 +7,16 @@ const template = require("../lib/template");
 const qs = require("querystring");
 const auth = require("../lib/auth");
 
+// lowdb
+const low = require("lowdb");
+const FileSync = require("lowdb/adapters/FileSync");
+const adapter = new FileSync("db.json");
+const db = low(adapter);
+db.defaults({ users: [] }).write();
+
+// shortid
+const shortid = require("shortid");
+
 module.exports = passport => {
   router.get("/login", (request, response) => {
     const fmsg = request.flash();
@@ -80,6 +90,41 @@ module.exports = passport => {
     ); // template 모듈 사용
 
     response.send(html);
+  });
+
+  router.post("/register_process", (request, response) => {
+    const post = request.body;
+    const email = post.email;
+    const pwd = post.pwd;
+    const pwd2 = post.pwd2;
+    const displayName = post.displayName;
+
+    if (email === "" || pwd === "" || pwd2 === "" || displayName === "") {
+      request.flash("error", "Must write all boxs!");
+      response.redirect("/auth/register");
+    } else if (pwd !== pwd2) {
+      request.flash("error", "Password must same!");
+      response.redirect("/auth/register");
+    } else if (
+      db
+        .get("users")
+        .find({ email: email })
+        .value()
+    ) {
+      request.flash("error", "Already used email!");
+      response.redirect("/auth/register");
+    } else {
+      db.get("users")
+        .push({
+          id: shortid.generate(),
+          email: email,
+          password: pwd,
+          displayName: displayName
+        })
+        .write();
+
+      response.redirect("/");
+    }
   });
 
   return router;
