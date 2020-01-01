@@ -52,5 +52,35 @@ module.exports = passport => {
     response.redirect("/");
   });
 
+  router.get("/register", (request, response) => {
+    const fmsg = request.flash();
+    let feedback = "";
+    if (fmsg.error) {
+      feedback = fmsg.error[0];
+    }
+
+    const title = "WEB - register";
+    const list = template.list(request.list); // template 모듈 사용
+    const body = `
+    <div style="color:red;">${feedback}</div>
+    <form action="/auth/register_process" method="POST">
+    <p><input type="text" name="email" placeholder="email" /></p>
+    <p><input type="password" name="pwd" placeholder="password" /></p>
+    <p><input type="password" name="pwd2" placeholder="password" /></p>
+    <p><input type="text" name="displayName" placeholder="display name"></p>
+    <p>
+        <input type="submit" value="register" />
+    </p>
+    </form>`;
+    const html = template.html(
+      title,
+      list,
+      body,
+      auth.statusUI(request, response)
+    ); // template 모듈 사용
+
+    response.send(html);
+  });
+
   return router;
 };
