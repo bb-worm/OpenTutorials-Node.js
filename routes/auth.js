@@ -8,11 +8,7 @@ const qs = require("querystring");
 const auth = require("../lib/auth");
 
 // lowdb
-const low = require("lowdb");
-const FileSync = require("lowdb/adapters/FileSync");
-const adapter = new FileSync("db.json");
-const db = low(adapter);
-db.defaults({ users: [] }).write();
+const db = require("../lib/db");
 
 // shortid
 const shortid = require("shortid");
@@ -114,16 +110,19 @@ module.exports = passport => {
       request.flash("error", "Already used email!");
       response.redirect("/auth/register");
     } else {
+      const user = {
+        id: shortid.generate(),
+        email: email,
+        password: pwd,
+        displayName: displayName
+      };
       db.get("users")
-        .push({
-          id: shortid.generate(),
-          email: email,
-          password: pwd,
-          displayName: displayName
-        })
+        .push(user)
         .write();
 
-      response.redirect("/");
+      request.login(user, err => {
+        return response.redirect("/");
+      });
     }
   });
 
