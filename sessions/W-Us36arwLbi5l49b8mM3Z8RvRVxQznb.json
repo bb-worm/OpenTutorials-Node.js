@@ -1,1 +1,11 @@
-{"cookie":{"originalMaxAge":null,"expires":null,"httpOnly":true,"path":"/"},"flash":{},"__lastAccess":1577881842721,"passport":{"user":"EbhUDkMX"}}
+{
+  "cookie": {
+    "originalMaxAge": null,
+    "expires": null,
+    "httpOnly": true,
+    "path": "/"
+  },
+  "flash": {},
+  "__lastAccess": 1577883306828,
+  "passport": { "user": "EbhUDkMX" }
+}
