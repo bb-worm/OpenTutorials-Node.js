@@ -6,6 +6,8 @@ const sanitizeHtml = require("sanitize-html");
 const template = require("../lib/template");
 const qs = require("querystring");
 const auth = require("../lib/auth");
+const db = require("../lib/db");
+const shortid = require("shortid");
 
 router.get("/create", (request, response) => {
   if (!auth.isOwner(request, response)) {
@@ -47,9 +49,16 @@ router.post("/create_process", (request, response) => {
   const title = post.title;
   const description = post.description;
 
-  fs.writeFile(`data/${title}`, description, "utf-8", err => {
-    response.redirect(`/topic/${qs.escape(title)}`);
-  });
+  const id = shortid.generate();
+  db.get("topics")
+    .push({
+      id: id,
+      title: title,
+      description: description,
+      user_id: request.user.id
+    })
+    .write();
+  response.redirect(`/topic/${id}`);
 });
 
 router.get("/update/:pageId", (request, response, next) => {
@@ -128,38 +137,43 @@ router.get("/:pageId", (request, response, next) => {
   }
 
   const filteredId = path.parse(request.params.pageId).base; // queryData.id가 ..을 사용해서 상위 dir로 가는 것을 막을 수 있음
-  fs.readFile(`data/${filteredId}`, "utf-8", (err, description) => {
-    if (err) {
-      // status code 500
-      next(err);
-    } else {
-      const title = request.params.pageId;
-      const sanitizedTitle = sanitizeHtml(title);
-      const sanitizedDescription = sanitizeHtml(description, {
-        allowedTags: ["h1"]
-      });
 
-      const list = template.list(request.list); // template 모듈 사용
-      const body = `<h2>${title}</h2><p>${sanitizedDescription}</p>`;
+  const topic = db
+    .get("topics")
+    .find({ id: filteredId })
+    .value();
+  const user = db
+    .get("users")
+    .find({ id: topic.user_id })
+    .value();
 
-      // delete는 link를 사용하는 get으로 구현해서는 안 됨. 접근할 수 없도록 post 방식으로 보내야 함.
-      const control = `<a href="/topic/create">create</a>
+  const sanitizedTitle = sanitizeHtml(topic.title);
+  const sanitizedDescription = sanitizeHtml(topic.description, {
+    allowedTags: ["h1"]
+  });
+
+  const list = template.list(request.list); // template 모듈 사용
+  const body = `
+    <h2>${sanitizedTitle}</h2>
+    <p>${sanitizedDescription}</p>
+    <p>by ${user.displayName}</p>`;
+
+  // delete는 link를 사용하는 get으로 구현해서는 안 됨. 접근할 수 없도록 post 방식으로 보내야 함.
+  const control = `<a href="/topic/create">create</a>
       <a href="/topic/update/${sanitizedTitle}">update</a>
       <form action="/topic/delete_process" method="POST">
         <input type="hidden" name="id" value="${sanitizedTitle}" />
         <input type="submit" value="delete" />
       </form>`;
-      const html = template.html(
-        sanitizedTitle,
-        list,
-        body,
-        auth.statusUI(request, response),
-        control
-      ); // template 모듈 사용
+  const html = template.html(
+    sanitizedTitle,
+    list,
+    body,
+    auth.statusUI(request, response),
+    control
+  ); // template 모듈 사용
 
-      response.send(html);
-    }
-  });
+  response.send(html);
 });
 
 module.exports = router;
