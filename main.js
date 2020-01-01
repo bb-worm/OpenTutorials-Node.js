@@ -4,6 +4,7 @@ const fs = require("fs");
 const cookie = require("cookie");
 const session = require("express-session");
 const FileStore = require("session-file-store")(session);
+const db = require("./lib/db");
 
 const port = 3000;
 
@@ -39,10 +40,11 @@ const indexRouter = require("./routes/index");
 위에서부터 내려오며 매칭되는 middleware를 실행하고, next()를 통해 다음 매칭되는 middleware로 넘어감
 */
 app.get("*", (request, response, next) => {
-  fs.readdir("./data", "utf-8", (err, filelist) => {
-    request.list = filelist;
-    next();
-  });
+  request.list = db
+    .get("topics")
+    .take(100)
+    .value();
+  next();
 });
 
 app.use("/", indexRouter);
