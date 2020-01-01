@@ -22,8 +22,8 @@ app.use(
   session({
     secret: "keyboard cat",
     resave: false,
-    saveUninitialized: true,
-    store: new FileStore()
+    saveUninitialized: true
+    // store: new FileStore()
   })
 );
 

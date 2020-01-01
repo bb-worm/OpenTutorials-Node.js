@@ -68,32 +68,41 @@ router.get("/update/:pageId", (request, response, next) => {
   }
 
   const filteredId = path.parse(request.params.pageId).base;
-  fs.readFile(`data/${filteredId}`, "utf-8", (err, description) => {
-    if (err) {
-      // status code 500
-      next(err);
-    } else {
-      const title = request.params.pageId;
-      const list = template.list(request.list); // template 모듈 사용
-      const body = `
+
+  const topic = db
+    .get("topics")
+    .find({ id: filteredId })
+    .value();
+  const user = db
+    .get("users")
+    .find({ id: topic.user_id })
+    .value();
+
+  // 사용자 확인
+  if (topic.user_id !== request.user.id) {
+    request.flash("error", "Not yours!");
+    return response.redirect("/");
+  }
+
+  const title = topic.title;
+  const list = template.list(request.list); // template 모듈 사용
+  const body = `
     <form action="/topic/update_process" method="POST">
-      <input type="hidden" name="id" value="${title}" />
+      <input type="hidden" name="id" value="${topic.id}" />
       <p><input type="text" name="title" placeholder="title" value="${title}" /></p>
-      <p><textarea name="description" placeholder="description">${description}</textarea></p>
+      <p><textarea name="description" placeholder="description">${topic.description}</textarea></p>
       <p><input type="submit" /></p>
     </form>
     `;
 
-      const html = template.html(
-        title,
-        list,
-        body,
-        auth.statusUI(request, response)
-      ); // template 모듈 사용
+  const html = template.html(
+    title,
+    list,
+    body,
+    auth.statusUI(request, response)
+  ); // template 모듈 사용
 
-      response.send(html);
-    }
-  });
+  response.send(html);
 });
 
 router.post("/update_process", (request, response) => {
@@ -106,12 +115,28 @@ router.post("/update_process", (request, response) => {
   const id = post.id;
   const title = post.title;
   const description = post.description;
-  fs.rename(`data/${id}`, `data/${title}`, err => {
-    console.log(err);
-  });
-  fs.writeFile(`data/${title}`, description, "utf-8", err => {
-    response.redirect(`/topic/${qs.escape(title)}`);
-  });
+
+  const topic = db
+    .get("topics")
+    .find({ id: id })
+    .value();
+
+  // 사용자 확인
+  if (topic.user_id !== request.user.id) {
+    request.flash("error", "Not yours!");
+    return response.redirect("/");
+  }
+
+  // assign : 수정
+  db.get("topics")
+    .find({ id: id })
+    .assign({
+      title: title,
+      description: description
+    })
+    .write();
+
+  response.redirect(`/topic/${topic.id}`);
 });
 
 router.post("/delete_process", (request, response) => {
@@ -124,9 +149,22 @@ router.post("/delete_process", (request, response) => {
   const id = post.id;
   const filteredId = path.parse(id).base;
 
-  fs.unlink(`data/${filteredId}`, err => {
-    response.redirect("/");
-  });
+  const topic = db
+    .get("topics")
+    .find({ id: filteredId })
+    .value();
+
+  if (topic.user_id !== request.user.id) {
+    request.flash("error", "Not yours!");
+    return response.redirect("/");
+  }
+
+  // 해당 파일 삭제
+  db.get("topics")
+    .remove({ id: filteredId })
+    .write();
+
+  response.redirect("/");
 });
 
 // querystring 사용하지 않고, route parameter를 사용
@@ -160,9 +198,9 @@ router.get("/:pageId", (request, response, next) => {
 
   // delete는 link를 사용하는 get으로 구현해서는 안 됨. 접근할 수 없도록 post 방식으로 보내야 함.
   const control = `<a href="/topic/create">create</a>
-      <a href="/topic/update/${sanitizedTitle}">update</a>
+      <a href="/topic/update/${topic.id}">update</a>
       <form action="/topic/delete_process" method="POST">
-        <input type="hidden" name="id" value="${sanitizedTitle}" />
+        <input type="hidden" name="id" value="${topic.id}" />
         <input type="submit" value="delete" />
       </form>`;
   const html = template.html(

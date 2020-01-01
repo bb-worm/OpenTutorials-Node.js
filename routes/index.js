@@ -9,6 +9,8 @@ router.get("/", (request, response) => {
   let feedback = "";
   if (fmsg.success) {
     feedback = fmsg.success[0];
+  } else if (fmsg.error) {
+    feedback = fmsg.error[0];
   }
 
   const description = "Hello, Node.js";
