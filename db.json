@@ -1,78 +1,12 @@
 {
   "users": [
     {
-      "id": "saPqK-89",
-      "email": "xofyd99",
-      "password": "111",
-      "displayName": "d"
-    },
-    {
-      "id": "hN6Wp0SJ",
-      "email": "test",
-      "password": "111",
-      "displayName": "test"
-    },
-    {
-      "id": "Eyc046Rp",
-      "email": "setest",
-      "password": "111",
-      "displayName": "test"
-    },
-    {
-      "id": "mpYcb7q_",
-      "email": "ttt",
-      "password": "11",
-      "displayName": "df"
-    },
-    {
-      "id": "JkQnD7S-",
-      "email": "sdfsdf",
-      "password": "11",
-      "displayName": "d"
-    },
-    {
-      "id": "jiT7bBgp",
-      "email": "asdf",
-      "password": "1",
-      "displayName": "adsf"
-    },
-    {
-      "id": "EbhUDkMX",
-      "email": "xo",
-      "password": "1",
-      "displayName": "12"
-    },
-    {
-      "id": "mLgDYbqz",
-      "email": "new",
-      "password": "$2b$10$Tg7D0qjpv0vSBLsoCSITb.iv1yHK8/pN7VLjD1xXD6DmslGu4ugN.",
-      "displayName": "new"
+      "id": "ZI_1aoOq",
+      "email": "xofyd99@naver.com",
+      "displayName": "htr",
+      "facebookId": "3411621045575890",
+      "password": "$2b$10$8ow9tZS9cnakE1MDR17/sOSINAn6vZCO/nKHSOk7BJ3b8nEu6DrlC"
     }
   ],
-  "topics": [
-    {
-      "id": "TXlxbyQi",
-      "title": "test12 22",
-      "description": "te",
-      "user_id": "saPqK-89"
-    },
-    {
-      "id": "0oWQFLr3",
-      "title": "s",
-      "description": "s",
-      "user_id": "saPqK-89"
-    },
-    {
-      "id": "_RbB4O8p",
-      "title": "22",
-      "description": "23",
-      "user_id": "EbhUDkMX"
-    },
-    {
-      "id": "0D00_9Hk",
-      "title": "",
-      "description": "",
-      "user_id": "EbhUDkMX"
-    }
-  ]
+  "topics": []
 }

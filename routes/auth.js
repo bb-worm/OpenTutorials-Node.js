@@ -99,6 +99,7 @@ module.exports = passport => {
     const pwd2 = post.pwd2;
     const displayName = post.displayName;
 
+    // 입력 검증
     if (email === "" || pwd === "" || pwd2 === "" || displayName === "") {
       request.flash("error", "Must write all boxs!");
       response.redirect("/auth/register");
@@ -111,9 +112,31 @@ module.exports = passport => {
         .find({ email: email })
         .value()
     ) {
-      request.flash("error", "Already used email!");
-      response.redirect("/auth/register");
+      const user = db
+        .get("users")
+        .find({ email: email })
+        .value();
+
+      if (user.password) {
+        // used email & there is a pwd
+        request.flash("error", "Already used email!");
+        response.redirect("/auth/register");
+      } else {
+        // used email, but no pwd : facebook login으로 가입된 것이므로 update 해줌
+        bcrypt.hash(pwd, saltRounds, (err, hash) => {
+          user.password = hash;
+          user.displayName = displayName;
+          db.get("users")
+            .find({ email: email })
+            .assign(user)
+            .write();
+          request.login(user, err => {
+            return response.redirect("/");
+          });
+        });
+      }
     } else {
+      // 회원 신규 등록
       bcrypt.hash(pwd, saltRounds, (err, hash) => {
         const user = {
           id: shortid.generate(),
